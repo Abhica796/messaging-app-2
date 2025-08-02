@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Message</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    #messages {
+      border: 1px solid #ccc;
+      padding: 10px;
+      height: 300px;
+      overflow-y: scroll;
+      background: #f9f9f9;
+    }
+    .sent {
+      text-align: right;
+      color: green;
+    }
+    .received {
+      text-align: left;
+      color: blue;
+    }
+    button.reply-btn {
+      font-size: 12px;
+      margin-left: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h2>📨 Messaging</h2>
+
+  <div id="messages"></div>
+
+  <form id="messageForm">
+    <input type="text" id="to" placeholder="Send to" required><br>
+    <textarea id="content" placeholder="Your message..." required></textarea><br>
+    <button type="submit">Send</button>
+  </form>
+
+  <p id="response"></p>
+
+  <script>
+    const token = localStorage.getItem("token");
+
+    // 🧠 Load full chat history on page load
+    async function loadHistory() {
+      const res = await fetch("/api/chat/history", {
+        method: "GET",
+        headers: {
+          "Authorization": "Bearer " + token
+        }
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        const messagesDiv = document.getElementById("messages");
+        messagesDiv.innerHTML = "";
+
+        data.history.forEach(msg => {
+          const p = document.createElement("p");
+          p.className = msg.direction === "sent" ? "sent" : "received";
+
+          if (msg.direction === "sent") {
+            p.textContent = `[${msg.timestamp}] To ${msg.with}: ${msg.message}`;
+          } else {
+            p.innerHTML = `[${msg.timestamp}] From ${msg.with}: ${msg.message} <button class="reply-btn" onclick="replyTo('${msg.with}')">↩️ Reply</button>`;
+          }
+
+          messagesDiv.appendChild(p);
+        });
+
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      } else {
+        document.getElementById("response").innerText = "⚠️ Failed to load history.";
+      }
+    }
+
+    loadHistory(); // 👈 Call on page load
+
+    // 💬 Sending a message and redirect regardless of success
+    document.getElementById("messageForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const to = document.getElementById("to").value;
+      const content = document.getElementById("content").value;
+
+      try {
+        const res = await fetch("/send", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+          },
+          body: JSON.stringify({ to, content })
+        });
+
+        const data = await res.json();
+        document.getElementById("response").innerText = data.message;
+      } catch (error) {
+        document.getElementById("response").innerText = "⚠️ Error sending message.";
+      }
+
+      // Redirect regardless of success or failure
+      window.location.href = "/fun.html"; // 👈 Change this to your desired site
+    });
+
+    // 🧠 Auto-fill "To" field when replying
+    window.replyTo = function(name) {
+      document.getElementById("to").value = name;
+      document.getElementById("content").focus();
+    };
+  </script>
+</body>
+</html>

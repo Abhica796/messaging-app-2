@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chat Screen</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    #tokenDisplay {
+      font-weight: bold;
+      color: #2c3e50;
+    }
+
+    .chat-box {
+      background: #fff;
+      padding: 15px;
+      max-width: 600px;
+      margin-top: 10px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+
+    .message {
+      padding: 10px;
+      border-radius: 10px;
+      margin: 5px 0;
+      max-width: 75%;
+      word-wrap: break-word;
+    }
+
+    .sent {
+      background: #d1f7c4;
+      align-self: flex-end;
+      text-align: right;
+    }
+
+    .received {
+      background: #f0f0f0;
+      align-self: flex-start;
+    }
+
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+    }
+
+    textarea, input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin-top: 10px;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #2980b9;
+    }
+
+    #initiationBox {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+    }
+
+    #initiationBox label {
+      margin-left: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Chat</h2>
+  <p>👛 Tokens (Reply Credits): <span id="tokenDisplay">--</span></p>
+
+  <div class="chat-box" id="chatBox">
+    <div class="chat-container" id="messages"></div>
+  </div>
+
+  <input type="text" id="to" placeholder="Send to (username)" />
+  <textarea id="content" placeholder="Type your message "></textarea>
+
+  <div id="initiationBox">
+    <input type="checkbox" id="initiation" />
+    <label for="initiation">First time message (initiation)</label>
+  </div>
+
+  <button onclick="sendMessage()">Send</button>
+
+  <p id="status"></p>
+
+  <script>
+    const token = localStorage.getItem("token");
+    const username = localStorage.getItem("username");
+    if (!token) {
+  token = "3";
+  localStorage.setItem("token", token);
+}
+
+    const tokenDisplay = document.getElementById("tokenDisplay");
+    const messagesDiv = document.getElementById("messages");
+
+    async function sendMessage() {
+      const to = document.getElementById("to").value.trim();
+      const content = document.getElementById("content").value.trim();
+      const initiation = document.getElementById("initiation").checked;
+
+      if (!to || !content) {
+        alert("Recipient and message are required.");
+        return;
+      }
+
+      if (!initiation && (!token || !username)) {
+        alert("You must be logged in to send this message.");
+        return;
+      }
+
+      const response = await fetch("/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(initiation ? {} : { Authorization: `Bearer ${token}` })
+        },
+        body: JSON.stringify({ to, content, initiation })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        document.getElementById("status").innerText = "✅ Message sent.";
+        addMessage(content, "sent");
+        if (!initiation) fetchUserInfo();
+      } else {
+        document.getElementById("status").innerText = "❌ " + data.message;
+      }
+    }
+
+    function addMessage(content, type) {
+      const msgDiv = document.createElement("div");
+      msgDiv.className = `message ${type}`;
+      msgDiv.innerText = content;
+      messagesDiv.appendChild(msgDiv);
+    }
+
+    async function fetchUserInfo() {
+      if (!token) return;
+      const response = await fetch("/me", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (data.success) {
+        tokenDisplay.innerText = data.user.replyCredits;
+      }
+    }
+
+    fetchUserInfo();
+  </script>
+</body>
+</html>

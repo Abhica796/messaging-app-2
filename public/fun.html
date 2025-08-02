@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Is Your Computer On?</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #fefae0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 2rem;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 10px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .yes {
+      background-color: #8bc34a;
+      color: white;
+    }
+
+    .no {
+      background-color: #f44336;
+      color: white;
+    }
+
+    .back {
+      background-color: #2196f3;
+      color: white;
+    }
+
+    button:hover {
+      transform: scale(1.1);
+    }
+
+    #response {
+      margin-top: 30px;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>🖥️ Is your computer on?</h1>
+  <div>
+    <button class="yes" onclick="respond('yes')">Yes</button>
+    <button class="no" onclick="respond('no')">No</button>
+    <button class="back" onclick="goBack()">Go Back</button>
+  </div>
+  <div id="response"></div>
+
+  <script>
+    function respond(answer) {
+      const response = document.getElementById("response");
+      if (answer === "yes") {
+        response.textContent = "🤔 Are you sure? Because this message wouldn't show up otherwise.";
+      } else {
+        response.textContent = "😂 Then how are you seeing this?";
+      }
+    }
+
+    function goBack() {
+      window.location.href = "https://www.youtube.com/watch?v=xvFZjo5PgG0"; // 🔁 Change this URL if needed
+    }
+  </script>
+</body>
+</html>
